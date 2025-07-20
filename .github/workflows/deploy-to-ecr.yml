@@ -1,0 +1,85 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-and-push:
+    name: Build and Push
+    runs-on: ubuntu-latest
+
+    # AWS에 OIDC로 로그인하기 위한 권한 설정
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # AWS 자격 증명 설정 (OIDC 역할 수임)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Check/Create API ECR Repository
+        run: |
+          # API 리포지토리 확인/생성
+          URL_API_REPO="url-shortener/api"
+          # 리포지토리 존재 여부 확인
+          if ! aws ecr describe-repositories --repository-names $URL_API_REPO > /dev/null 2>&1; then
+            echo "Creating ECR Repository: $URL_API_REPO"
+            aws ecr create-repository --repository-name $URL_API_REPO
+          else
+            echo "ECR Repository already exists: $URL_API_REPO"
+          fi
+
+      - name: Check/Create Web ECR Repository
+        run: |
+          # Web 리포지토리 확인/생성
+          URL_WEB_REPO="url-shortener/web"
+          # 리포지토리 존재 여부 확인
+          if ! aws ecr describe-repositories --repository-names $URL_WEB_REPO > /dev/null 2>&1; then
+            echo "Creating ECR Repository: $URL_WEB_REPO"
+            aws ecr create-repository --repository-name $URL_WEB_REPO
+          else
+            echo "ECR Repository already exists: $URL_WEB_REPO"
+          fi
+
+      # Amazon ECR에 로그인
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr # 다음 단계에서 사용하기 위해 id 지정
+
+      # API 이미지 빌드, 태그 지정 및 푸시
+      - name: Build, tag, and push API image to Amazon ECR
+        run: |
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG=${{ github.sha }}
+          API_REPO="url-shortener/api"
+
+          # API 이미지 빌드 및 푸시
+          docker build -f apps/api/Dockerfile -t $ECR_REGISTRY/$API_REPO:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$API_REPO:$IMAGE_TAG
+
+          # latest 태그도 푸시
+          docker tag $ECR_REGISTRY/$API_REPO:$IMAGE_TAG $ECR_REGISTRY/$API_REPO:latest
+          docker push $ECR_REGISTRY/$API_REPO:latest
+
+      # Web 이미지 빌드, 태그 지정 및 푸시
+      - name: Build, tag, and push Web image to Amazon ECR
+        run: |
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG=${{ github.sha }}
+          WEB_REPO="url-shortener/web"
+
+          # Web 이미지 빌드 및 푸시
+          docker build -f apps/web/Dockerfile -t $ECR_REGISTRY/$WEB_REPO:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$WEB_REPO:$IMAGE_TAG
+
+          # latest 태그도 푸시
+          docker tag $ECR_REGISTRY/$WEB_REPO:$IMAGE_TAG $ECR_REGISTRY/$WEB_REPO:latest
+          docker push $ECR_REGISTRY/$WEB_REPO:latest
