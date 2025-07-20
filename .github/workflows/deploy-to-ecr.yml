@@ -65,10 +65,6 @@ jobs:
           docker build -f apps/api/Dockerfile -t $ECR_REGISTRY/$API_REPO:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$API_REPO:$IMAGE_TAG
 
-          # latest 태그도 푸시
-          docker tag $ECR_REGISTRY/$API_REPO:$IMAGE_TAG $ECR_REGISTRY/$API_REPO:latest
-          docker push $ECR_REGISTRY/$API_REPO:latest
-
       # Web 이미지 빌드, 태그 지정 및 푸시
       - name: Build, tag, and push Web image to Amazon ECR
         run: |
@@ -79,7 +75,3 @@ jobs:
           # Web 이미지 빌드 및 푸시
           docker build -f apps/web/Dockerfile -t $ECR_REGISTRY/$WEB_REPO:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$WEB_REPO:$IMAGE_TAG
-
-          # latest 태그도 푸시
-          docker tag $ECR_REGISTRY/$WEB_REPO:$IMAGE_TAG $ECR_REGISTRY/$WEB_REPO:latest
-          docker push $ECR_REGISTRY/$WEB_REPO:latest
