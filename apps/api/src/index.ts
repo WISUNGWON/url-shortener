@@ -6,7 +6,6 @@ const port = process.env.PORT || 3001;
 const server = createServer();
 
 server.get("/test", async (req, res) => {
-  const { shortKey } = req.params;
 
   try {
     const urlEntry = await db("test")
@@ -14,13 +13,20 @@ server.get("/test", async (req, res) => {
       .first();
 
     if (urlEntry) {
-      return res.json(urlEntry);
+      return res.json({
+        message: "Live reload is working!",
+        data: urlEntry,
+        timestamp: new Date().toISOString()
+      });
     } else {
       return res.status(404).send("Short URL not found.");
     }
   } catch (error) {
     console.error("Error retrieving original URL:", error);
-    return res.status(500).json({ error: "Failed to retrieve URL." });
+    return res.status(500).json({
+      error: "Failed to retrieve URL.",
+      message: "Live reload detected this change!"
+    });
   }
 });
 
