@@ -2,6 +2,7 @@ import { json, urlencoded } from "body-parser";
 import express, { type Express } from "express";
 import morgan from "morgan";
 import cors from "cors";
+import db from "./db";
 
 export const createServer = (): Express => {
   const app = express();
@@ -13,6 +14,10 @@ export const createServer = (): Express => {
     .use(cors())
     .get("/message/:name", (req, res) => {
       return res.json({ message: `hello ${req.params.name}` });
+    })
+    .get("/test", (_, res) => {
+      const dbData = db("test").select("*");
+      return res.json({ message: "Test endpoint is working!", dbData });
     })
     .get("/status", (_, res) => {
       return res.json({ ok: true });
