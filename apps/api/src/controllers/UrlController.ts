@@ -41,6 +41,22 @@ class UrlController {
       res.status(500).json({ error: "Failed to retrieve URL." });
     }
   }
+
+  async getOriginalUrl(req: Request, res: Response): Promise<Response> {
+    const { shortKey } = req.params;
+
+    try {
+      const originalUrl = await UrlService.getOriginalUrl(shortKey);
+      if (originalUrl) {
+        return res.json({ originalUrl, shortKey });
+      } else {
+        return res.status(404).json({ error: "Short URL not found." });
+      }
+    } catch (error) {
+      console.error("Error in UrlController.getOriginalUrl:", error);
+      return res.status(500).json({ error: "Failed to retrieve URL." });
+    }
+  }
 }
 
 export default new UrlController();

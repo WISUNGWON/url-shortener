@@ -10,11 +10,11 @@ interface ShortUrl {
 class UrlRepository {
   private tableName = 'urls';
 
-  async create(originalUrl: string): Promise<number> {
+  async create(originalUrl: string): Promise<{ id: number }> {
     const [id] = await db(this.tableName)
       .insert({ original_url: originalUrl })
       .returning('id');
-    return id as number; // PostgreSQL의 returning은 배열을 반환
+    return id
   }
 
   async updateShortKey(id: number, shortKey: string): Promise<void> {

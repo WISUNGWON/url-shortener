@@ -21,13 +21,14 @@ export default function Web() {
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const test = await fetch(`${API_HOST}/test`);
-
-    const testResponse = await test.json();
-    console.log(testResponse);
-
     try {
-      const result = await fetch(`${API_HOST}/message/${name}`);
+      const result = await fetch(`${API_HOST}/shorten`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ originalUrl: name }),
+      });
       const response = await result.json();
       setResponse(response);
     } catch (err) {
