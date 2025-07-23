@@ -1,15 +1,15 @@
-import { redirect } from 'next/navigation'; // next/navigation에서 redirect 함수 임포트
+import { redirect } from 'next/navigation';
 
 interface RedirectPageProps {
-  params: {
+  params: Promise<{
     shortKey: string;
-  };
+  }>;
 }
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default async function RedirectPage({ params }: RedirectPageProps) {
-  const { shortKey } = params;
+  const { shortKey } = await params;
 
   if (!shortKey || typeof shortKey !== 'string') {
     return (
